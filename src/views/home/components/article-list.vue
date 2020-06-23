@@ -53,7 +53,6 @@ export default {
         // 1. 请求获取数据
         const { data } = await getArticles({
           channel_id: this.channel.id, // 频道ID
-          // 你可以把 timestamp 理解为页码
           // 如果请求第1页数据：当前最新时间戳 Date.now
           // 如果请求之后的数据，使用本次接口返回的数据中的 pre_timestamp
           timestamp: this.timestamp || Date.now(), // 时间戳，请求新的推荐数据传当前的时间戳，请求历史推荐传指定的时间戳
