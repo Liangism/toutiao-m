@@ -104,7 +104,7 @@ export default {
         const { data } = await getUserInfo()
         this.userInfo = data.data
       } catch (error) {
-        this.$toast('登录失败')
+        this.$toast.fail('登录失败')
       }
     }
   }

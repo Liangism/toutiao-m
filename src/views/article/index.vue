@@ -1,7 +1,7 @@
 <template>
   <div class="article-container">
     <!-- 导航栏 -->
-    <van-nav-bar class="page-nav-bar" left-arrow title="头条" @click-left="$router.back()"></van-nav-bar>
+    <van-nav-bar class="page-nav-bar" left-arrow title="文章详情" @click-left="$router.back()"></van-nav-bar>
 
     <div class="main-wrap">
       <!-- 加载中 -->
@@ -34,10 +34,25 @@
         <!-- 文章内容 -->
         <div class="article-content markdown-body" v-html="article.content" ref="article-content"></div>
         <van-divider>正文结束</van-divider>
+
+        <!-- 文章评论列表 -->
+        <comment-list
+          :source="article.art_id"
+          :list="commentList"
+          @onload-success="totalCommentCount = $event.total_count"
+          @reply-click="onReplyClick"
+        />
+
         <!-- 底部区域 -->
         <div class="article-bottom">
-          <van-button class="comment-btn" type="default" round size="small">写评论</van-button>
-          <van-icon name="comment-o" info="123" color="#777" />
+          <van-button
+            class="comment-btn"
+            type="default"
+            round
+            size="small"
+            @click="isPostShow = true"
+          >写评论</van-button>
+          <van-icon class="comment-icon" name="comment-o" :info="totalCommentCount" color="#777" />
           <collect-article
             class="btn-item"
             v-model="article.is_collected"
@@ -46,6 +61,11 @@
           <like-article class="btn-item" v-model="article.attitude" :article-id="article.art_id" />
           <van-icon name="share" color="#777"></van-icon>
         </div>
+
+        <!-- 发布评论 -->
+        <van-popup v-model="isPostShow" closeable position="bottom">
+          <comment-post :target="article.art_id" @post-success="onPostSuccess" />
+        </van-popup>
       </div>
 
       <!-- 加载失败：404 -->
@@ -61,6 +81,13 @@
         <van-button class="retry-btn" @click="loadArticle">点击重试</van-button>
       </div>
     </div>
+
+    <!-- 评论回复 -->
+    <!-- 弹出层懒渲染，只有在第一次展示时才渲染内容，之后的关闭和显示都是在切换内容的隐藏和显示 -->
+    <van-popup v-model="isReplyShow" position="bottom" style="height: 95%">
+      <!-- v-if 条件渲染 -->
+      <comment-reply v-if="isReplyShow" :comment="currentComment" @close="isReplyShow = false" />
+    </van-popup>
   </div>
 </template>
 
@@ -70,13 +97,25 @@ import { ImagePreview } from 'vant'
 import FollowUser from '@/components/follow-user'
 import CollectArticle from '@/components/collect-article'
 import LikeArticle from '@/components/like-article'
+import CommentList from './components/comment-list'
+import CommentPost from './components/comment-post'
+import CommentReply from './components/comment-reply'
 
 export default {
   name: 'ArticleIndex',
   components: {
     FollowUser,
     CollectArticle,
-    LikeArticle
+    LikeArticle,
+    CommentList,
+    CommentPost,
+    CommentReply
+  },
+  // 依赖注入
+  provide: function() {
+    return {
+      articleId: this.articleId
+    }
   },
   props: {
     articleId: {
@@ -89,7 +128,12 @@ export default {
       article: {}, // 文章详情
       loading: true, // 加载中的 loading 状态
       errStatus: 0, // 失败状态码
-      isFollowLoading: false
+      isFollowLoading: false,
+      totalCommentCount: 0,
+      isPostShow: false, // 控制发布评论的显示状态
+      commentList: [], // 评论列表
+      isReplyShow: false,
+      currentComment: {} // 当前点击回复的评论项
     }
   },
   created() {
@@ -131,6 +175,17 @@ export default {
           })
         }
       })
+    },
+    onPostSuccess(data) {
+      // 关闭弹出层
+      this.isPostShow = false
+      // 将发布内容显示到列表顶部
+      this.commentList.unshift(data.new_obj)
+    },
+    onReplyClick(comment) {
+      this.currentComment = comment
+      // 显示弹出层
+      this.isReplyShow = true
     }
   }
 }
@@ -246,10 +301,27 @@ export default {
     }
     /deep/ .van-icon {
       font-size: 40px;
+    }
+    .comment-icon {
+      top: 2px;
+      color: #777;
       .van-info {
         font-size: 16px;
         background-color: #e22829;
       }
+    }
+    .btn-item {
+      border: none;
+      padding: 0;
+      height: 40px;
+      line-height: 40px;
+      color: #777777;
+    }
+    .collect-btn--collected {
+      color: #ffa500;
+    }
+    .like-btn--liked {
+      color: #e5645f;
     }
   }
 }

@@ -91,7 +91,7 @@ export default {
         // 将数据更新到组件中
         this.channels = channels
       } catch (err) {
-        this.$toast('获取用户频道数据失败')
+        this.$toast.fail('获取用户频道数据失败')
       }
     },
     onUpdateActive(index, isChannelEditShow = true) {

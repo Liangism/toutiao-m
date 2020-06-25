@@ -139,13 +139,13 @@ export default {
       // 3.请求发送验证码
       try {
         await sendSms(this.user.mobile)
-        this.$toast('发送成功')
+        this.$toast.success('发送成功')
       } catch (err) {
         this.isCountDownShow = false
         if (err.response.status === 429) {
           this.$toast('请勿频繁发送')
         } else {
-          this.$toast('发送失败，请重试')
+          this.$toast.fail('发送失败，请重试')
         }
       }
     }
